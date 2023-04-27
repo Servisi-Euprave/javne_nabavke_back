@@ -28,8 +28,8 @@ func main() {
 	if err != nil {
 		l.Println("Error connecting to postgres")
 	}
-	nabavkaService := service.NewNabavkaService(l, nabavkeRepo)
-	nabavkaController := controller.NewNabavkaController(l, *nabavkaService)
+	procurementService := service.NewProcurementService(l, nabavkeRepo)
+	procurementController := controller.NewProcurementController(l, *procurementService)
 
 	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
 	if err != nil {
@@ -40,9 +40,8 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(client.CheckAuthWithPublicKey(publicKey))
 	{
-		authorized.POST("/kreirajNabavku", nabavkaController.CreateNabavka)
-		authorized.POST("/kreirajPonudu", nabavkaController.CreatePonuda)
-
+		authorized.POST("/kreirajNabavku", procurementController.CreateProcurement)
+		authorized.POST("/kreirajPonudu", procurementController.CreatePonuda)
 	}
 
 	s := &http.Server{
