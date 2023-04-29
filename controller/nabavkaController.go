@@ -50,6 +50,12 @@ func (n *ProcurementController) CreateProcurementPlan(c *gin.Context) {
 
 }
 
-func (n *ProcurementController) CreateOffer(context *gin.Context) {
+func (n *ProcurementController) GetProcurements(c *gin.Context) {
+	procurements, err := n.service.GetProcurements()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
 
+	}
+	c.JSON(http.StatusCreated, procurements)
 }

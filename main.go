@@ -1,9 +1,9 @@
-package javne_nabavke_back
+package main
 
 import (
 	"context"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"javne_nabavke_back/client"
 	"javne_nabavke_back/controller"
 	"javne_nabavke_back/repository"
 	"javne_nabavke_back/service"
@@ -17,13 +17,13 @@ import (
 
 func main() {
 
-	port := os.Getenv("JAVNE_PORT")
+	port := os.Getenv("PROCUREMENTS_PORT")
 	if len(port) == 0 {
-		port = ":8082"
+		port = "8082"
 	}
 	l := log.New(os.Stdout, "Javne_nabavke", log.LstdFlags)
-	r := gin.New()
-	r.Use(gin.Recovery())
+	r := gin.Default()
+	r.Use(cors.Default())
 	nabavkeRepo, err := repository.PostgreSQLConnection(l)
 	if err != nil {
 		l.Println("Error connecting to postgres")
@@ -31,21 +31,23 @@ func main() {
 	procurementService := service.NewProcurementService(l, nabavkeRepo)
 	procurementController := controller.NewProcurementController(l, *procurementService)
 
-	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
+	//	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
 	if err != nil {
 		l.Println(err.Error())
 		return
 	}
 
-	authorized := r.Group("/")
-	authorized.Use(client.CheckAuthWithPublicKey(publicKey))
-	{
-		authorized.POST("/kreirajNabavku", procurementController.CreateProcurement)
-		authorized.POST("/kreirajPonudu", procurementController.CreatePonuda)
-	}
+	authorized := r.Group("/api")
+	//authorized.Use(client.CheckAuthWithPublicKey(publicKey))
+	//{
+	//
+	//}
+	authorized.POST("/createProcurement", procurementController.CreateProcurement)
+	authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
+	authorized.GET("/getProcurements", procurementController.GetProcurements)
 
 	s := &http.Server{
-		Addr:           port,
+		Addr:           ":" + port,
 		Handler:        r,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

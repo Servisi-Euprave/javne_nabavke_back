@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"javne_nabavke_back/model"
@@ -54,7 +55,11 @@ func (e *errorString) Error() string {
 	return e.s
 }
 
-func (n *ProcurementPostgreSQL) AddProcurement(procurement *model.Procurement) error {
+func (n *ProcurementPostgreSQL) InsertProcurement(procurement *model.Procurement) error {
+	uuid := uuid.NewV4().String()
+	procurement.StartDate = time.Now()
+	// Set the UUID as the ProcurementPlanId field
+	procurement.Id = uuid
 	n.l.Println("Procurement_Repository_Postgres")
 	createdProcurement := n.db.Create(procurement)
 	var errMessage = createdProcurement.Error
@@ -64,7 +69,11 @@ func (n *ProcurementPostgreSQL) AddProcurement(procurement *model.Procurement) e
 	}
 	return nil
 }
-func (n *ProcurementPostgreSQL) AddProcurementPlan(procurementPlan *model.ProcurementPlan) error {
+func (n *ProcurementPostgreSQL) InsertProcurementPlan(procurementPlan *model.ProcurementPlan) error {
+	uuid := uuid.NewV4().String()
+
+	// Set the UUID as the ProcurementPlanId field
+	procurementPlan.ProcurementPlanId = uuid
 	n.l.Println("Procurement_Plan_Repository_Postgres")
 	createdProcurementPlan := n.db.Create(procurementPlan)
 	var errMessage = createdProcurementPlan.Error
@@ -74,14 +83,14 @@ func (n *ProcurementPostgreSQL) AddProcurementPlan(procurementPlan *model.Procur
 	}
 	return nil
 }
-func (n *ProcurementPostgreSQL) GetProcurements() ([]model.Procurement, error) {
-	var procurements []model.Procurement
-	now := time.Now()
-	lastMonthStart := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.Local)
-	lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
+func (n *ProcurementPostgreSQL) GetProcurements() ([]*model.Procurement, error) {
+	var procurements []*model.Procurement
+	//	now := time.Now()
+	//lastMonthStart := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.Local)
+	//lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
 
 	// Retrieve all procurements from the "procurements" table
-	if err := n.db.Table("procurement").Where("start_date  BETWEEN ? AND ?", lastMonthStart, lastMonthEnd).Find(&procurements).Error; err != nil {
+	if err := n.db.Table("procurements").Find(&procurements).Error; err != nil {
 		return nil, err
 	}
 
