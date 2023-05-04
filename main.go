@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"javne_nabavke_back/client"
 	"javne_nabavke_back/controller"
 	"javne_nabavke_back/repository"
 	"javne_nabavke_back/service"
@@ -23,7 +24,14 @@ func main() {
 	}
 	l := log.New(os.Stdout, "Javne_nabavke", log.LstdFlags)
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200", "http://localhost:4201", "http://localhost:3000"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "User-Agent", "Referrer", "Host", "Token", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	nabavkeRepo, err := repository.PostgreSQLConnection(l)
 	if err != nil {
 		l.Println("Error connecting to postgres")
@@ -31,20 +39,21 @@ func main() {
 	procurementService := service.NewProcurementService(l, nabavkeRepo)
 	procurementController := controller.NewProcurementController(l, *procurementService)
 
-	//	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
+	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
 	if err != nil {
 		l.Println(err.Error())
 		return
 	}
 
-	authorized := r.Group("/api")
-	//authorized.Use(client.CheckAuthWithPublicKey(publicKey))
-	//{
-	//
-	//}
-	authorized.POST("/createProcurement", procurementController.CreateProcurement)
-	authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
-	authorized.GET("/getProcurements", procurementController.GetProcurements)
+	authorized := r.Group("/authorizedApi")
+	authorized.Use(client.CheckAuthWithPublicKey(publicKey))
+	{
+		authorized.POST("/createProcurement", procurementController.CreateProcurement)
+		authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
+	}
+
+	open := r.Group("/api")
+	open.GET("/getProcurements", procurementController.GetProcurements)
 
 	s := &http.Server{
 		Addr:           ":" + port,

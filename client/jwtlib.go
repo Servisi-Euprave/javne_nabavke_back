@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -41,7 +42,8 @@ func CheckAuthWithPublicKey(publicKey *rsa.PublicKey) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
 			return
 		}
-		ctx.Set("claims", claims)
+		log.Println(claims.Subject)
+		ctx.Set("claims", claims.Subject)
 		ctx.Next()
 	}
 

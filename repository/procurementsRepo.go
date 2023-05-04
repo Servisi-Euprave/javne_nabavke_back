@@ -57,8 +57,12 @@ func (e *errorString) Error() string {
 
 func (n *ProcurementPostgreSQL) InsertProcurement(procurement *model.Procurement) error {
 	uuid := uuid.NewV4().String()
-	procurement.StartDate = time.Now()
-	// Set the UUID as the ProcurementPlanId field
+	startDateStr := time.Now().Format("2006-01-02")
+	startDate, err := time.Parse("2006-01-02", startDateStr)
+	if err != nil {
+		n.l.Println("Unable to Create procurement.", err)
+	}
+	procurement.StartDate = startDate
 	procurement.Id = uuid
 	n.l.Println("Procurement_Repository_Postgres")
 	createdProcurement := n.db.Create(procurement)
