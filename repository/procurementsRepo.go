@@ -89,14 +89,24 @@ func (n *ProcurementPostgreSQL) InsertProcurementPlan(procurementPlan *model.Pro
 }
 func (n *ProcurementPostgreSQL) GetProcurements() ([]*model.Procurement, error) {
 	var procurements []*model.Procurement
-	//	now := time.Now()
+	now := time.Now()
 	//lastMonthStart := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.Local)
 	//lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
 
 	// Retrieve all procurements from the "procurements" table
-	if err := n.db.Table("procurements").Find(&procurements).Error; err != nil {
+	if err := n.db.Table("procurements").Order("start_date DESC").Where("end_date > ?", now.Format("2006-01-02")).Find(&procurements).Error; err != nil {
 		return nil, err
 	}
 
 	return procurements, nil
+}
+func (n *ProcurementPostgreSQL) GetProcurementPlans(companyPiB string) ([]*model.ProcurementPlan, error) {
+	var procurementsPlans []*model.ProcurementPlan
+
+	if err := n.db.Table("procurement_plans").Where("company_pib <> ?", companyPiB).Find(&procurementsPlans).Error; err != nil {
+		return nil, err
+	}
+	log.Println(procurementsPlans)
+
+	return procurementsPlans, nil
 }

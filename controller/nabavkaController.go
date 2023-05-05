@@ -42,11 +42,18 @@ func (n *ProcurementController) CreateProcurement(c *gin.Context) {
 
 }
 func (n *ProcurementController) CreateProcurementPlan(c *gin.Context) {
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found in context"})
+		return
+	}
+
 	var procurementPlan model.ProcurementPlan
 	if err := c.ShouldBindJSON(&procurementPlan); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}
+	procurementPlan.CompanyPib = companyPiB.(string)
 	err := n.service.SaveProcurementPlan(&procurementPlan)
 	if err != nil {
 		n.l.Printf("Error occurred, Couldn't create procurement plan")
@@ -54,6 +61,21 @@ func (n *ProcurementController) CreateProcurementPlan(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"Status": "Procurement plan created"})
+
+}
+func (n *ProcurementController) GetProcurementPlans(c *gin.Context) {
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "claims not found in context"})
+		return
+	}
+	plans, err := n.service.GetProcurementPlans(companyPiB.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+
+	}
+	c.JSON(http.StatusOK, plans)
 
 }
 
@@ -65,5 +87,5 @@ func (n *ProcurementController) GetProcurements(c *gin.Context) {
 		return
 
 	}
-	c.JSON(http.StatusCreated, procurements)
+	c.JSON(http.StatusOK, procurements)
 }

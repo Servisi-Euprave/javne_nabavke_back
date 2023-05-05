@@ -50,6 +50,7 @@ func main() {
 	{
 		authorized.POST("/createProcurement", procurementController.CreateProcurement)
 		authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
+		authorized.GET("/getProcurementPlans", procurementController.GetProcurementPlans)
 	}
 
 	open := r.Group("/api")

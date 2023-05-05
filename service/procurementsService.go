@@ -34,9 +34,20 @@ func (s *ProcurementService) SaveProcurementPlan(procurementPlan *model.Procurem
 	return nil
 }
 func (s *ProcurementService) GetProcurements() ([]*model.Procurement, error) {
+	s.l.Println("Procurement Service - Get procurements")
+
 	proc, err := s.repo.GetProcurements()
 	if err != nil {
 		return nil, err
 	}
 	return proc, nil
+}
+func (s *ProcurementService) GetProcurementPlans(companyPiB string) ([]*model.ProcurementPlan, error) {
+	s.l.Println("Procurement Service - Get procurement plans with company PiB")
+
+	plans, err := s.GetProcurementPlans(companyPiB)
+	if err != nil {
+		return nil, err
+	}
+	return plans, nil
 }

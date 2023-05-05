@@ -28,11 +28,14 @@ func CheckAuthWithPublicKey(publicKey *rsa.PublicKey) gin.HandlerFunc {
 		}
 		token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				log.Println("Invalid signing method")
 				return nil, errors.New("unexpected signing method")
 			}
 			return publicKey, nil
 		})
 		if err != nil || !token.Valid {
+			log.Printf("Public key: %v\n", publicKey)
+			log.Printf("error parsing token: %s", err.Error())
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
@@ -46,7 +49,6 @@ func CheckAuthWithPublicKey(publicKey *rsa.PublicKey) gin.HandlerFunc {
 		ctx.Set("claims", claims.Subject)
 		ctx.Next()
 	}
-
 }
 func ReadRSAPublicKeyFromFile(filePath string) (*rsa.PublicKey, error) {
 	var key *rsa.PublicKey

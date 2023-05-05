@@ -6,4 +6,5 @@ type INabavkaRepo interface {
 	InsertProcurement(nabavka *model.Procurement) error
 	InsertProcurementPlan(nabavka *model.ProcurementPlan) error
 	GetProcurements() ([]*model.Procurement, error)
+	GetProcurementPlans(companyPiB string) ([]*model.ProcurementPlan, error)
 }
