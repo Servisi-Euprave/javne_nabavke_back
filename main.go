@@ -32,12 +32,25 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	nabavkeRepo, err := repository.PostgreSQLConnection(l)
+	//nabavkeRepo, err := repository.PostgreSQLConnection(l)
+
+	dbConnection, err := repository.PostgreSQLConnection(l)
 	if err != nil {
 		l.Println("Error connecting to postgres")
 	}
-	procurementService := service.NewProcurementService(l, nabavkeRepo)
+
+	if err != nil {
+		l.Println("Error creating PostgreSQL connection")
+	}
+
+	procurementRepo := repository.CreateProcurementRepository(l, dbConnection)
+	offerRepo := repository.CreateOfferRepository(l, dbConnection)
+
+	procurementService := service.NewProcurementService(l, procurementRepo)
 	procurementController := controller.NewProcurementController(l, *procurementService)
+
+	offerService := service.NewOfferOfferService(l, offerRepo)
+	offerController := controller.NewOfferController(l, *offerService)
 
 	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
 	if err != nil {
@@ -51,10 +64,16 @@ func main() {
 		authorized.POST("/createProcurement", procurementController.CreateProcurement)
 		authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
 		authorized.GET("/getProcurementPlans", procurementController.GetProcurementPlans)
+		authorized.POST("/postOffer", offerController.CreateOffer)
+		authorized.GET("/getProcurementOffers/:id", offerController.ProcurementOffers)
+		authorized.PUT("/declareWinner/:id", procurementController.DeclareWinner)
+
 	}
 
 	open := r.Group("/api")
 	open.GET("/getProcurements", procurementController.GetProcurements)
+	open.GET("/getCompanyProcurements/:id", procurementController.GetCompanyProcurements)
+	open.GET("/getProcurementAndOfferList", procurementController.GetProcWithOffer)
 
 	s := &http.Server{
 		Addr:           ":" + port,

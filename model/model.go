@@ -5,11 +5,21 @@ import (
 )
 
 type Offer struct {
-	Price          float64 `json:"price"`
-	BidderPib      string
-	TermAndPayment string
-	ProcurementId  string `json:"procurement_id"`
+	Id             string    `json:"id"`
+	Price          float64   `json:"price"`
+	BidderPib      string    `json:"bidder_pib"`
+	TermAndPayment string    `json:"term_and_payment"`
+	ProcurementId  string    `json:"procurement_id"`
+	StartDate      time.Time `json:"start_date"`
 }
+
+type OfferRequestDTO struct {
+	Price          float64 `json:"price"`
+	BidderPib      string  `json:"bidder_pib"`
+	TermAndPayment string  `json:"term_and_payment"`
+	ProcurementId  string  `json:"procurement_id"`
+}
+
 type ProcurementPlan struct {
 	CompanyPib        string `json:"company_pib"`
 	ProcurementPlanId string `json:"procurement_plan_id"`
@@ -26,4 +36,15 @@ type Procurement struct {
 	EndDate            string    `json:"end_date"`
 	ProcurementName    string    `json:"procurement_name"`
 	Description        string    `json:"description"`
+	winnerId           string    `json:"winner_id"`
+}
+type ProcurementWithWinnerOffer struct {
+	ProcuringEntityPiB string    `json:"procuring_entity_pi_b"`
+	StartDate          time.Time `json:"start_date"`
+	EndDate            string    `json:"end_date"`
+	ProcurementName    string    `json:"procurement_name"`
+	Description        string    `json:"description"`
+	Price              float64   `json:"price"`
+	BidderPib          string    `json:"bidder_pib"`
+	TermAndPayment     string    `json:"term_and_payment"`
 }

@@ -7,8 +7,9 @@ import (
 )
 
 type ProcurementService struct {
-	l    *log.Logger
-	repo repository.INabavkaRepo
+	l         *log.Logger
+	repo      repository.INabavkaRepo
+	repoOffer repository.IOfferRepo
 }
 
 func NewProcurementService(l *log.Logger, repo repository.INabavkaRepo) *ProcurementService {
@@ -50,4 +51,50 @@ func (s *ProcurementService) GetProcurementPlans(companyPiB string) ([]*model.Pr
 		return nil, err
 	}
 	return plans, nil
+}
+
+func (s *ProcurementService) GetCompanyProcurements(companyPiB string) ([]*model.Procurement, error) {
+	s.l.Println("Procurement Service - Get company procurements")
+
+	proc, err := s.repo.GetCompanyProcurements(companyPiB)
+	if err != nil {
+		return nil, err
+	}
+	return proc, nil
+
+}
+func (s *ProcurementService) DeclareWinner(companyPiB string, id string) error {
+	err := s.repo.DeclareWinner(companyPiB, id)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+func (s *ProcurementService) GetProcurementAndWinningOffer() ([]model.ProcurementWithWinnerOffer, error) {
+	procurements, err := s.repo.GetAllProcurements()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var procurementsWithWinner []model.ProcurementWithWinnerOffer
+	for _, procurement := range procurements {
+		winner, err := s.repoOffer.GetResults(procurement.Id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		procurementWithWinner := model.ProcurementWithWinnerOffer{
+			ProcuringEntityPiB: procurement.ProcuringEntityPiB,
+			StartDate:          procurement.StartDate,
+			EndDate:            procurement.EndDate,
+			ProcurementName:    procurement.ProcurementName,
+			Description:        procurement.Description,
+			Price:              winner.Price,
+			BidderPib:          winner.BidderPib,
+			TermAndPayment:     winner.TermAndPayment,
+		}
+		procurementsWithWinner = append(procurementsWithWinner, procurementWithWinner)
+
+	}
+	return procurementsWithWinner, nil
+
 }

@@ -1,61 +1,24 @@
 package repository
 
 import (
-	"fmt"
 	uuid "github.com/satori/go.uuid"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"javne_nabavke_back/model"
 	"log"
-	"os"
 	"time"
 )
 
-type ProcurementPostgreSQL struct {
+type ProcurementRepository struct {
 	l  *log.Logger
 	db *gorm.DB
 }
 
-const (
-	errorMsgProc = "Can't create procurement right now."
-	errorMsgPlan = "Can't create procurement plan right now."
-)
-
-func PostgreSQLConnection(l *log.Logger) (*ProcurementPostgreSQL, error) {
-	l.Println("PostrgeSQL_Repo")
-	USERNAME := os.Getenv("USER")
-	dbHost := os.Getenv("HOST")
-	PASSWORD := os.Getenv("PASSWORD")
-	dbName := os.Getenv("DB")
-	PORT := os.Getenv("PORT")
-	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s port=%s", dbHost, USERNAME, dbName, PASSWORD, PORT)
-	db, err := gorm.Open(postgres.Open(dbURI), &gorm.Config{})
-	if err != nil {
-		log.Println("Error establishing a database connection")
-		panic("Failed to connect to database")
-	}
-	setup(db)
-	l.Println("Successfully connected to postgres database")
-	return &ProcurementPostgreSQL{l, db}, nil
-
-}
-func setup(db *gorm.DB) {
-	db.AutoMigrate(&model.Procurement{})
-	db.AutoMigrate(&model.ProcurementPlan{})
-}
-func QueryError(text string) error {
-	return &errorString{text}
+func CreateProcurementRepository(logger *log.Logger, dbConnection *gorm.DB) *ProcurementRepository {
+	repository := &ProcurementRepository{logger, dbConnection}
+	return repository
 }
 
-type errorString struct {
-	s string
-}
-
-func (e *errorString) Error() string {
-	return e.s
-}
-
-func (n *ProcurementPostgreSQL) InsertProcurement(procurement *model.Procurement) error {
+func (n *ProcurementRepository) InsertProcurement(procurement *model.Procurement) error {
 	uuid := uuid.NewV4().String()
 	startDateStr := time.Now().Format("2006-01-02")
 	startDate, err := time.Parse("2006-01-02", startDateStr)
@@ -66,14 +29,14 @@ func (n *ProcurementPostgreSQL) InsertProcurement(procurement *model.Procurement
 	procurement.Id = uuid
 	n.l.Println("Procurement_Repository_Postgres")
 	createdProcurement := n.db.Create(procurement)
-	var errMessage = createdProcurement.Error
-	if createdProcurement.Error != nil {
+	errMessage := createdProcurement.Error
+	if errMessage != nil {
 		n.l.Println("Unable to Create procurement.", errMessage)
-		return QueryError(errorMsgProc)
+		return CannotCreateError("Procurement")
 	}
 	return nil
 }
-func (n *ProcurementPostgreSQL) InsertProcurementPlan(procurementPlan *model.ProcurementPlan) error {
+func (n *ProcurementRepository) InsertProcurementPlan(procurementPlan *model.ProcurementPlan) error {
 	uuid := uuid.NewV4().String()
 
 	// Set the UUID as the ProcurementPlanId field
@@ -83,11 +46,11 @@ func (n *ProcurementPostgreSQL) InsertProcurementPlan(procurementPlan *model.Pro
 	var errMessage = createdProcurementPlan.Error
 	if createdProcurementPlan.Error != nil {
 		n.l.Println("Unable to Create procurement plan.", errMessage)
-		return QueryError(errorMsgPlan)
+		return CannotCreateError("Procurement plan")
 	}
 	return nil
 }
-func (n *ProcurementPostgreSQL) GetProcurements() ([]*model.Procurement, error) {
+func (n *ProcurementRepository) GetProcurements() ([]*model.Procurement, error) {
 	var procurements []*model.Procurement
 	now := time.Now()
 	//lastMonthStart := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.Local)
@@ -100,7 +63,14 @@ func (n *ProcurementPostgreSQL) GetProcurements() ([]*model.Procurement, error) 
 
 	return procurements, nil
 }
-func (n *ProcurementPostgreSQL) GetProcurementPlans(companyPiB string) ([]*model.ProcurementPlan, error) {
+func (n *ProcurementRepository) GetCompanyProcurements(procuringEntityPiB string) ([]*model.Procurement, error) {
+	var procurements []*model.Procurement
+	if err := n.db.Table("procurements").Order("start_date DESC").Where("procuring_entity_pi_b =  ?", procuringEntityPiB).Find(&procurements).Error; err != nil {
+		return nil, err
+	}
+	return procurements, nil
+}
+func (n *ProcurementRepository) GetProcurementPlans(companyPiB string) ([]*model.ProcurementPlan, error) {
 	var procurementsPlans []*model.ProcurementPlan
 
 	if err := n.db.Table("procurement_plans").Where("company_pib <> ?", companyPiB).Find(&procurementsPlans).Error; err != nil {
@@ -109,4 +79,17 @@ func (n *ProcurementPostgreSQL) GetProcurementPlans(companyPiB string) ([]*model
 	log.Println(procurementsPlans)
 
 	return procurementsPlans, nil
+}
+func (n *ProcurementRepository) GetAllProcurements() ([]*model.Procurement, error) {
+	var procurements []*model.Procurement
+	if err := n.db.Table("procurements").Order("start_date DESC").Find(&procurements).Error; err != nil {
+		return nil, err
+	}
+	return procurements, nil
+}
+func (n *ProcurementRepository) DeclareWinner(companyPIB string, offerId string) error {
+	if err := n.db.Table("procurements").Where("id = ?", companyPIB).Update("winner_id", offerId).Error; err != nil {
+		return err
+	}
+	return nil
 }
