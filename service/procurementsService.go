@@ -64,6 +64,8 @@ func (s *ProcurementService) GetCompanyProcurements(companyPiB string) ([]*model
 
 }
 func (s *ProcurementService) DeclareWinner(companyPiB string, id string) error {
+	s.l.Println("Service Procurement - Declare winner")
+
 	err := s.repo.DeclareWinner(companyPiB, id)
 	if err != nil {
 		return err
@@ -72,15 +74,18 @@ func (s *ProcurementService) DeclareWinner(companyPiB string, id string) error {
 
 }
 func (s *ProcurementService) GetProcurementAndWinningOffer() ([]model.ProcurementWithWinnerOffer, error) {
+	s.l.Println("Service Procurement - Get procurements and winning offer")
+
 	procurements, err := s.repo.GetAllProcurements()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	var procurementsWithWinner []model.ProcurementWithWinnerOffer
 	for _, procurement := range procurements {
 		winner, err := s.repoOffer.GetResults(procurement.Id)
 		if err != nil {
-			log.Fatal(err)
+			log.Println("Error fetching winner:", err)
+			continue
 		}
 		procurementWithWinner := model.ProcurementWithWinnerOffer{
 			ProcuringEntityPiB: procurement.ProcuringEntityPiB,

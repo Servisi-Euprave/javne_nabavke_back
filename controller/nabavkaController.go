@@ -20,6 +20,7 @@ func NewProcurementController(l *log.Logger, service service.ProcurementService)
 	}
 }
 func (n *ProcurementController) CreateProcurement(c *gin.Context) {
+	n.l.Println("Procurement_Controller - CreateProcurement")
 	companyPiB, exists := c.Get("claims")
 	if !exists {
 		// Handle errors case where claims are not set in the context
@@ -42,6 +43,8 @@ func (n *ProcurementController) CreateProcurement(c *gin.Context) {
 
 }
 func (n *ProcurementController) CreateProcurementPlan(c *gin.Context) {
+	n.l.Println("Procurement_Controller - CreateProcurementPlan")
+
 	companyPiB, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
@@ -64,6 +67,8 @@ func (n *ProcurementController) CreateProcurementPlan(c *gin.Context) {
 
 }
 func (n *ProcurementController) GetProcurementPlans(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Get procurement plan")
+
 	companyPiB, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
@@ -80,6 +85,7 @@ func (n *ProcurementController) GetProcurementPlans(c *gin.Context) {
 }
 
 func (n *ProcurementController) GetProcurements(c *gin.Context) {
+	n.l.Println("Procurement_Controller - GET procurements")
 
 	procurements, err := n.service.GetProcurements()
 	if err != nil {
@@ -91,6 +97,8 @@ func (n *ProcurementController) GetProcurements(c *gin.Context) {
 }
 
 func (n *ProcurementController) GetCompanyProcurements(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Get company procurements")
+
 	companyId := c.Param("id")
 	procurements, err := n.service.GetCompanyProcurements(companyId)
 	if err != nil {
@@ -103,6 +111,8 @@ func (n *ProcurementController) GetCompanyProcurements(c *gin.Context) {
 }
 
 func (n *ProcurementController) DeclareWinner(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Declare winner")
+
 	companyPiB, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
@@ -120,6 +130,8 @@ func (n *ProcurementController) DeclareWinner(c *gin.Context) {
 }
 
 func (n *ProcurementController) GetProcWithOffer(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Get procurements with offer")
+
 	procWithOffers, err := n.service.GetProcurementAndWinningOffer()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
@@ -131,6 +143,8 @@ func (n *ProcurementController) GetProcWithOffer(c *gin.Context) {
 }
 
 func (n *ProcurementController) GetCompProcurements(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Get company Procurements")
+
 	companyPiB, exists := c.Get("claims")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})

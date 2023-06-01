@@ -92,7 +92,7 @@ func (n *ProcurementRepository) GetAllProcurements() ([]*model.Procurement, erro
 	n.l.Println("Procurement_repo: get All procurements")
 
 	var procurements []*model.Procurement
-	if err := n.db.Table("procurements").Order("start_date DESC").Find(&procurements).Error; err != nil {
+	if err := n.db.Table("procurements").Order("start_date DESC").Where("winner_id <> '' ").Find(&procurements).Error; err != nil {
 		return nil, err
 	}
 	return procurements, nil

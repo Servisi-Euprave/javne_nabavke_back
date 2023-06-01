@@ -16,10 +16,13 @@ func NewOfferOfferService(l *log.Logger, repo repository.IOfferRepo) *OfferServi
 }
 
 func (s *OfferService) InsertOffer(offerDTO *model.OfferRequestDTO) error {
+	s.l.Println("Offer Service - Insert Offer")
+
 	s.l.Printf("InsertOffer")
 	return s.offerRepository.InsertOffer(offerDTO)
 }
 
 func (s *OfferService) GetOffers(procurementId string) ([]*model.Offer, error) {
+	s.l.Println("Offer Service - get Offers")
 	return s.offerRepository.GetOffers(procurementId)
 }

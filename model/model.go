@@ -10,6 +10,7 @@ type Offer struct {
 	BidderPib      string    `json:"bidder_pib"`
 	TermAndPayment string    `json:"term_and_payment"`
 	ProcurementId  string    `json:"procurement_id"`
+	Quantity       int       `json:"quantity"`
 	StartDate      time.Time `json:"start_date"`
 }
 
