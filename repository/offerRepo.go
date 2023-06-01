@@ -32,6 +32,7 @@ func (repo *OfferRepository) InsertOffer(offerDTO *model.OfferRequestDTO) error 
 		BidderPib:      offerDTO.BidderPib,
 		TermAndPayment: offerDTO.TermAndPayment,
 		ProcurementId:  offerDTO.ProcurementId,
+		Quantity:       offerDTO.Quantity,
 		StartDate:      startDate,
 	})
 	errorMessage := createdOffer.Error

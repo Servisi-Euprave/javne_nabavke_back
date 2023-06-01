@@ -29,6 +29,8 @@ func (n *ProcurementRepository) InsertProcurement(procurement *model.Procurement
 	}
 	procurement.StartDate = startDate
 	procurement.Id = uuid
+	procurement.WinnerId = "empty"
+	n.l.Println(procurement.ProcurementPlanId)
 	n.l.Println("Procurement_Repository_Postgres")
 	createdProcurement := n.db.Create(procurement)
 	errMessage := createdProcurement.Error
@@ -56,12 +58,13 @@ func (n *ProcurementRepository) GetProcurements() ([]*model.Procurement, error) 
 	n.l.Println("Procurement_repo: get procurements with end date matching")
 
 	var procurements []*model.Procurement
-	now := time.Now()
+	//now := time.Now()
 	//lastMonthStart := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.Local)
 	//lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
 
 	// Retrieve all procurements from the "procurements" table
-	if err := n.db.Table("procurements").Order("start_date DESC").Where("end_date > ?", now.Format("2006-01-02")).Find(&procurements).Error; err != nil {
+	//now.Format("2006-01-02"),
+	if err := n.db.Table("procurements").Order("start_date DESC").Where("winner_id = ?", "empty").Find(&procurements).Error; err != nil {
 		return nil, err
 	}
 
@@ -98,10 +101,10 @@ func (n *ProcurementRepository) GetAllProcurements() ([]*model.Procurement, erro
 	return procurements, nil
 }
 
-func (n *ProcurementRepository) DeclareWinner(companyPIB string, offerId string) error {
+func (n *ProcurementRepository) DeclareWinner(procId string, offerId string) error {
 	n.l.Println("Procurement_repo: declare winner")
 
-	if err := n.db.Table("procurements").Where("procuring_entity_pi_b = ?", companyPIB).Update("winner_id", offerId).Error; err != nil {
+	if err := n.db.Table("procurements").Where("id = ?", procId).Update("winner_id", offerId).Error; err != nil {
 		return err
 	}
 	return nil

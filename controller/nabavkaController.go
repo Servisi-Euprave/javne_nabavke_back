@@ -112,14 +112,10 @@ func (n *ProcurementController) GetCompanyProcurements(c *gin.Context) {
 
 func (n *ProcurementController) DeclareWinner(c *gin.Context) {
 	n.l.Println("Procurement_Controller - Declare winner")
+	procId := c.Param("procId")
 
-	companyPiB, exists := c.Get("claims")
-	if !exists {
-		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
-		return
-	}
 	offerId := c.Param("id")
-	err := n.service.DeclareWinner(companyPiB.(string), offerId)
+	err := n.service.DeclareWinner(procId, offerId)
 	if err != nil {
 		n.l.Printf("Error occurred, Couldn't declare Winner")
 		c.JSON(http.StatusInternalServerError, gin.H{"Error creating procurement! :": err.Error()})
