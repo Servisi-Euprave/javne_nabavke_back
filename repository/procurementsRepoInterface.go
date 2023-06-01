@@ -10,4 +10,5 @@ type INabavkaRepo interface {
 	GetCompanyProcurements(companyPiB string) ([]*model.Procurement, error)
 	GetAllProcurements() ([]*model.Procurement, error)
 	DeclareWinner(companyPib string, id string) error
+	GetWinnerWithProc() ([]*model.ProcurementWithWinnerOffer, error)
 }

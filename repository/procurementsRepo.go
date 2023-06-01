@@ -81,7 +81,7 @@ func (n *ProcurementRepository) GetProcurementPlans(companyPiB string) ([]*model
 
 	var procurementsPlans []*model.ProcurementPlan
 
-	if err := n.db.Table("procurement_plans").Where("company_pib <> ?", companyPiB).Find(&procurementsPlans).Error; err != nil {
+	if err := n.db.Table("procurement_plans").Where("company_pib = ?", companyPiB).Find(&procurementsPlans).Error; err != nil {
 		return nil, err
 	}
 	log.Println(procurementsPlans)
@@ -92,7 +92,7 @@ func (n *ProcurementRepository) GetAllProcurements() ([]*model.Procurement, erro
 	n.l.Println("Procurement_repo: get All procurements")
 
 	var procurements []*model.Procurement
-	if err := n.db.Table("procurements").Order("start_date DESC").Where("winner_id <> '' ").Find(&procurements).Error; err != nil {
+	if err := n.db.Table("procurements").Order("start_date DESC").Where("winner_id <> ?", "").Find(&procurements).Error; err != nil {
 		return nil, err
 	}
 	return procurements, nil
@@ -100,8 +100,19 @@ func (n *ProcurementRepository) GetAllProcurements() ([]*model.Procurement, erro
 func (n *ProcurementRepository) DeclareWinner(companyPIB string, offerId string) error {
 	n.l.Println("Procurement_repo: declare winner")
 
-	if err := n.db.Table("procurements").Where("id = ?", companyPIB).Update("winner_id", offerId).Error; err != nil {
+	if err := n.db.Table("procurements").Where("procuring_entity_pi_b = ?", companyPIB).Update("winner_id", offerId).Error; err != nil {
 		return err
 	}
 	return nil
+}
+func (n *ProcurementRepository) GetWinnerWithProc() ([]*model.ProcurementWithWinnerOffer, error) {
+	n.l.Println("Procurement_repo: get All procurements")
+
+	procurements := []*model.ProcurementWithWinnerOffer{}
+	if err := n.db.Table("procurements").Select("procurements.procuring_entity_pi_b," +
+		" procurements.start_date,procurements.end_date,procurements.procurement_name,procurements.description," +
+		" offers.price,offers.bidder_pib, offers.term_and_payment").Joins("inner join offers on offers.id = procurements.winner_id").Scan(&procurements).Error; err != nil {
+		return nil, err
+	}
+	return procurements, nil
 }

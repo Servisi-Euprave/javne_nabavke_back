@@ -38,7 +38,7 @@ type Procurement struct {
 	EndDate            string    `json:"end_date"`
 	ProcurementName    string    `json:"procurement_name"`
 	Description        string    `json:"description"`
-	winnerId           string    `json:"winner_id"`
+	WinnerId           string    `json:"winner_id"`
 }
 type ProcurementWithWinnerOffer struct {
 	ProcuringEntityPiB string    `json:"procuring_entity_pi_b"`
