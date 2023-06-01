@@ -129,3 +129,19 @@ func (n *ProcurementController) GetProcWithOffer(c *gin.Context) {
 	c.JSON(http.StatusOK, procWithOffers)
 
 }
+
+func (n *ProcurementController) GetCompProcurements(c *gin.Context) {
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
+		return
+	}
+	procurements, err := n.service.GetCompanyProcurements(companyPiB.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+
+	}
+	c.JSON(http.StatusOK, procurements)
+
+}

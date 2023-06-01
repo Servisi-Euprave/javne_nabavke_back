@@ -21,8 +21,14 @@ func NewOfferController(l *log.Logger, service service.OfferService) *OfferContr
 	}
 }
 func (n *OfferController) CreateOffer(c *gin.Context) {
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
+		return
+	}
 
 	var offer model.OfferRequestDTO
+	offer.BidderPib = companyPiB.(string)
 	if err := c.ShouldBindJSON(&offer); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return

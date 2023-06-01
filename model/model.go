@@ -6,7 +6,7 @@ import (
 
 type Offer struct {
 	Id             string    `json:"id"`
-	Price          float64   `json:"price"`
+	Price          string    `json:"price"`
 	BidderPib      string    `json:"bidder_pib"`
 	TermAndPayment string    `json:"term_and_payment"`
 	ProcurementId  string    `json:"procurement_id"`
@@ -14,10 +14,11 @@ type Offer struct {
 }
 
 type OfferRequestDTO struct {
-	Price          float64 `json:"price"`
-	BidderPib      string  `json:"bidder_pib"`
-	TermAndPayment string  `json:"term_and_payment"`
-	ProcurementId  string  `json:"procurement_id"`
+	Price          string `json:"price"`
+	BidderPib      string `json:"bidder_pib"`
+	TermAndPayment string `json:"term_and_payment"`
+	Quantity       int    `json:"quantity"`
+	ProcurementId  string `json:"procurement_id"`
 }
 
 type ProcurementPlan struct {
@@ -44,7 +45,7 @@ type ProcurementWithWinnerOffer struct {
 	EndDate            string    `json:"end_date"`
 	ProcurementName    string    `json:"procurement_name"`
 	Description        string    `json:"description"`
-	Price              float64   `json:"price"`
+	Price              string    `json:"price"`
 	BidderPib          string    `json:"bidder_pib"`
 	TermAndPayment     string    `json:"term_and_payment"`
 }
