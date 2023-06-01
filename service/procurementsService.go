@@ -84,33 +84,12 @@ func (s *ProcurementService) GetProcurementAndWinningOffer() ([]*model.Procureme
 	return procurementsWithWinner, nil
 }
 
-//func (s *ProcurementService) GetProcurementAndWinningOffer() ([]model.ProcurementWithWinnerOffer, error) {
-//	s.l.Println("Service Procurement - Get procurements and winning offer")
-//
-//	procurements, err := s.repo.GetAllProcurements()
-//	if err != nil {
-//		return nil, err
-//	}
-//	var procurementsWithWinner []model.ProcurementWithWinnerOffer
-//	for _, procurement := range procurements {
-//		winner, err := s.repoOffer.GetResults(procurement.Id)
-//		if err != nil {
-//			log.Println("Error fetching winner:", err)
-//			continue
-//		}
-//		procurementWithWinner := model.ProcurementWithWinnerOffer{
-//			ProcuringEntityPiB: procurement.ProcuringEntityPiB,
-//			StartDate:          procurement.StartDate,
-//			EndDate:            procurement.EndDate,
-//			ProcurementName:    procurement.ProcurementName,
-//			Description:        procurement.Description,
-//			Price:              winner.Price,
-//			BidderPib:          winner.BidderPib,
-//			TermAndPayment:     winner.TermAndPayment,
-//		}
-//		procurementsWithWinner = append(procurementsWithWinner, procurementWithWinner)
-//
-//	}
-//	return procurementsWithWinner, nil
-//
-//}
+func (s *ProcurementService) GetAllFinishedProcurements() ([]*model.Procurement, error) {
+	s.l.Println("Service Procurement - Get procurements and winning offer")
+	procurementsWithWinner, err := s.repo.GetAllProcurements()
+	if err != nil {
+		return nil, err
+	}
+	return procurementsWithWinner, nil
+
+}

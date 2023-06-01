@@ -73,6 +73,7 @@ func main() {
 
 	open := r.Group("/api")
 	open.GET("/getProcurements", procurementController.GetProcurements)
+	open.GET("/getAllProcurements", procurementController.GetAllProcurements)
 	open.GET("/getCompanyProcurements/:id", procurementController.GetCompanyProcurements)
 	open.GET("/getProcurementAndOfferList", procurementController.GetProcWithOffer)
 

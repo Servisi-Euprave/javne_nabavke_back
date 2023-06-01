@@ -159,3 +159,15 @@ func (n *ProcurementController) GetCompProcurements(c *gin.Context) {
 	c.JSON(http.StatusOK, procurements)
 
 }
+
+func (n *ProcurementController) GetAllProcurements(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Get ALL Procurements")
+	procurements, err := n.service.GetAllFinishedProcurements()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+
+	}
+	c.JSON(http.StatusOK, procurements)
+
+}
