@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,12 +10,30 @@ import (
 	"os"
 )
 
-type NabavkePostgreSQL struct {
-	l  *log.Logger
-	db *gorm.DB
+type DatabaseError struct {
+	Err     error
+	Message string
 }
 
-func PostgreSQLConnection(l *log.Logger) (*NabavkePostgreSQL, error) {
+func (repositoryError *DatabaseError) Error() string {
+	return fmt.Sprintf("%s not found in query. %v\n", repositoryError.Message, repositoryError.Err)
+}
+
+func QueryNotFoundError(name string) error {
+	return &DatabaseError{
+		errors.New("Query not found"),
+		fmt.Sprintf("%s not found\n", name),
+	}
+}
+
+func CannotCreateError(name string) error {
+	return &DatabaseError{
+		errors.New("Cannot create"),
+		fmt.Sprintf("Cannot create %s\n", name),
+	}
+}
+
+func PostgreSQLConnection(l *log.Logger) (*gorm.DB, error) {
 	l.Println("PostrgeSQL_Repo")
 	USERNAME := os.Getenv("USER")
 	dbHost := os.Getenv("HOST")
@@ -29,23 +48,11 @@ func PostgreSQLConnection(l *log.Logger) (*NabavkePostgreSQL, error) {
 	}
 	setup(db)
 	l.Println("Successfully connected to postgres database")
-	return &NabavkePostgreSQL{l, db}, nil
+	return db, nil
 
 }
 func setup(db *gorm.DB) {
-	db.AutoMigrate(&model.Nabavka{})
-	db.AutoMigrate(&model.PlanJavneNabavke{})
-}
-
-type errorString struct {
-	s string
-}
-
-func (e *errorString) Error() string {
-	return e.s
-}
-
-func (n NabavkePostgreSQL) AddNabavka(nabavka *model.Nabavka) error {
-	//TODO implement me
-	panic("implement me")
+	db.AutoMigrate(&model.Procurement{})
+	db.AutoMigrate(&model.ProcurementPlan{})
+	db.AutoMigrate(&model.Offer{})
 }

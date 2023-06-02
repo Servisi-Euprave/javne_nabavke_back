@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -17,40 +18,43 @@ func CheckAuthWithPublicKey(publicKey *rsa.PublicKey) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		bearerToken := ctx.GetHeader("Authorization")
 		if bearerToken == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header not provided"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "Authorization header not provided"})
 			return
 		}
 		bearer, tokenStr, found := strings.Cut(bearerToken, " ")
 		if !found || bearer != "Bearer" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid format for bearer token"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "invalid format for bearer token"})
 			return
 		}
 		token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				log.Println("Invalid signing method")
 				return nil, errors.New("unexpected signing method")
 			}
 			return publicKey, nil
 		})
 		if err != nil || !token.Valid {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			log.Printf("Public key: %v\n", publicKey)
+			log.Printf("errors parsing token: %s", err.Error())
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "invalid token"})
 			return
 		}
 		// Token is valid, extract the claims and set them in the context
 		claims, ok := token.Claims.(*jwt.RegisteredClaims)
 		if !ok {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid claims"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"errors": "invalid claims"})
 			return
 		}
-		ctx.Set("claims", claims)
+		log.Println(claims.Subject)
+		ctx.Set("claims", claims.Subject)
 		ctx.Next()
 	}
-
 }
 func ReadRSAPublicKeyFromFile(filePath string) (*rsa.PublicKey, error) {
 	var key *rsa.PublicKey
 	keyFile, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("No key provided, error generating key: %w", err)
+		return nil, fmt.Errorf("No key provided, errors generating key: %w", err)
 	}
 	defer keyFile.Close()
 	keyData, err := ioutil.ReadAll(keyFile)

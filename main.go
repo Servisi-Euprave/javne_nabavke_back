@@ -1,7 +1,8 @@
-package javne_nabavke_back
+package main
 
 import (
 	"context"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"javne_nabavke_back/client"
 	"javne_nabavke_back/controller"
@@ -17,19 +18,39 @@ import (
 
 func main() {
 
-	port := os.Getenv("JAVNE_PORT")
+	port := os.Getenv("PROCUREMENTS_PORT")
 	if len(port) == 0 {
-		port = ":8082"
+		port = "8082"
 	}
 	l := log.New(os.Stdout, "Javne_nabavke", log.LstdFlags)
-	r := gin.New()
-	r.Use(gin.Recovery())
-	nabavkeRepo, err := repository.PostgreSQLConnection(l)
+	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200", "http://localhost:4201", "http://localhost:3000"},
+		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "User-Agent", "Referrer", "Host", "Token", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+	//nabavkeRepo, err := repository.PostgreSQLConnection(l)
+
+	dbConnection, err := repository.PostgreSQLConnection(l)
 	if err != nil {
 		l.Println("Error connecting to postgres")
 	}
-	nabavkaService := service.NewNabavkaService(l, nabavkeRepo)
-	nabavkaController := controller.NewNabavkaController(l, *nabavkaService)
+
+	if err != nil {
+		l.Println("Error creating PostgreSQL connection")
+	}
+
+	procurementRepo := repository.CreateProcurementRepository(l, dbConnection)
+	offerRepo := repository.CreateOfferRepository(l, dbConnection)
+
+	procurementService := service.NewProcurementService(l, procurementRepo)
+	procurementController := controller.NewProcurementController(l, *procurementService)
+
+	offerService := service.NewOfferOfferService(l, offerRepo)
+	offerController := controller.NewOfferController(l, *offerService)
 
 	publicKey, err := client.ReadRSAPublicKeyFromFile("./public.pem")
 	if err != nil {
@@ -37,16 +58,28 @@ func main() {
 		return
 	}
 
-	authorized := r.Group("/")
+	authorized := r.Group("/authorizedApi")
 	authorized.Use(client.CheckAuthWithPublicKey(publicKey))
 	{
-		authorized.POST("/kreirajNabavku", nabavkaController.CreateNabavka)
-		authorized.POST("/kreirajPonudu", nabavkaController.CreatePonuda)
+		authorized.POST("/createProcurement", procurementController.CreateProcurement)
+		authorized.POST("/createProcurementPlan", procurementController.CreateProcurementPlan)
+		authorized.GET("/getProcurementPlans", procurementController.GetProcurementPlans)
+		authorized.POST("/postOffer", offerController.CreateOffer)
+		authorized.GET("/getProcurementOffers/:id", offerController.ProcurementOffers)
+		authorized.PUT("/declareWinner/:procId/:id", procurementController.DeclareWinner)
+		authorized.GET("/getCompProcurements", procurementController.GetCompProcurements)
+		authorized.GET("/checkIfCanPostOffer/:id", procurementController.CheckIfCanPostOffer)
 
 	}
 
+	open := r.Group("/api")
+	open.GET("/getProcurements", procurementController.GetProcurements)
+	open.GET("/getAllProcurements", procurementController.GetAllProcurements)
+	open.GET("/getCompanyProcurements/:id", procurementController.GetCompanyProcurements)
+	open.GET("/getProcurementAndOfferList", procurementController.GetProcWithOffer)
+
 	s := &http.Server{
-		Addr:           port,
+		Addr:           ":" + port,
 		Handler:        r,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
