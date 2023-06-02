@@ -167,3 +167,18 @@ func (n *ProcurementController) GetAllProcurements(c *gin.Context) {
 	c.JSON(http.StatusOK, procurements)
 
 }
+
+func (n *ProcurementController) CheckIfCanPostOffer(c *gin.Context) {
+	n.l.Println("Procurement_Controller - Check if can post offer")
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
+		return
+	}
+	offerId := c.Param("id")
+	if companyPiB.(string) == offerId {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "User can't create offer for themself"})
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "sve ok :)"})
+
+}

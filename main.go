@@ -68,6 +68,7 @@ func main() {
 		authorized.GET("/getProcurementOffers/:id", offerController.ProcurementOffers)
 		authorized.PUT("/declareWinner/:procId/:id", procurementController.DeclareWinner)
 		authorized.GET("/getCompProcurements", procurementController.GetCompProcurements)
+		authorized.GET("/checkIfCanPostOffer/:id", procurementController.CheckIfCanPostOffer)
 
 	}
 
