@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"io"
 	"javne_nabavke_back/model"
 	"javne_nabavke_back/service"
 	"log"
@@ -94,6 +95,32 @@ func (n *ProcurementController) GetProcurements(c *gin.Context) {
 
 	}
 	c.JSON(http.StatusOK, procurements)
+}
+func (n *ProcurementController) GetCompanyFromToken(c *gin.Context) {
+	n.l.Println("Procurement_Controller - GET company info")
+
+	companyPiB, exists := c.Get("claims")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": "claims not found in context"})
+		return
+	}
+	url := "http://apr-backend:7887/api/company/" + companyPiB.(string)
+
+	// Send the HTTP GET request
+	response, err := http.Get(url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": err.Error()})
+		return
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"errors": err.Error()})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json; charset=utf-8", body)
 }
 
 func (n *ProcurementController) GetCompanyProcurements(c *gin.Context) {
